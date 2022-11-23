@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    android:label="YUHH BBY"
+    app:startDestination="@id/FirstFragment">
+
+    <fragment
+        android:id="@+id/FirstFragment"
+        android:name="com.example.b07projectdesign.FirstFragment"
+        tools:layout="@layout/fragment_login">
+        <action
+            android:id="@+id/action_FirstFragment_to_studentFragment"
+            app:destination="@id/studentFragment"
+            app:popExitAnim="@android:anim/fade_in" />
+    </fragment>
+    <fragment
+        android:id="@+id/studentFragment"
+        android:name="com.example.b07projectdesign.StudentFragment"
+        android:label="Hello [NAME]"
+        tools:layout="@layout/fragment_student">
+        <action
+            android:id="@+id/action_studentFragment_to_timetable"
+            app:destination="@id/timetable"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+    </fragment>
+    <fragment
+        android:id="@+id/timetable"
+        android:name="com.example.b07projectdesign.Timetable"
+        android:label="Generated Table for ..."
+        tools:layout="@layout/fragment_timetable">
+        <action
+            android:id="@+id/action_timetable_to_studentFragment"
+            app:destination="@id/studentFragment"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+    </fragment>
+</navigation>
