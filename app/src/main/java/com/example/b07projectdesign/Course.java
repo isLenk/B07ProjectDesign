@@ -8,6 +8,7 @@ import com.google.firebase.firestore.Exclude;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Course  { // implements Serializable
@@ -17,14 +18,14 @@ public class Course  { // implements Serializable
     private String code;
     private String name;
     private Map<Integer, Boolean> sessionOfferings;
-    private Map<String, Boolean> prerequisites;
+    private List<String> prerequisites;
 
     // Attach a listener
     public Course() {
         if (courses == null) courses = new HashMap<>();
     }
 
-    public Course(String code, String name, Map<Integer, Boolean> sessions, Map<String, Boolean> prerequisites) {
+    public Course(String code, String name, Map<Integer, Boolean> sessions, List<String> prerequisites) {
         this();
         this.code = code;
         this.name = name;
@@ -41,7 +42,7 @@ public class Course  { // implements Serializable
         courses.put(code, this);
     }
 
-    public void setPrerequisites(Map<String, Boolean> prerequisites) {
+    public void setPrerequisites(List<String> prerequisites) {
         this.prerequisites = prerequisites;
     }
 
@@ -62,8 +63,11 @@ public class Course  { // implements Serializable
 //            if (c != null) result.put(c.code, true);
 //        }
 //        return result;
-   public Map<String, Boolean> getPrerequisites() {
-       return prerequisites;
+   public Map<String, String> getPrerequisites() {
+        Map<String, String> result = new HashMap<>();
+        for (int i = 0; i < prerequisites.size(); i++)
+            result.put(Integer.toString(i), prerequisites.get(i));
+        return result;
     }
 
     public Map<String, Boolean> getSessionOfferings() {
@@ -79,6 +83,7 @@ public class Course  { // implements Serializable
             result.put(i, session.get(i));
         sessionOfferings = result;
     }
+
     @NonNull
     public String toString() {
         return code + ": " + name;

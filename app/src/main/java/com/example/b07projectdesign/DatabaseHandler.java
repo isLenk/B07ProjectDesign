@@ -17,19 +17,10 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.FirebaseFirestoreSettings;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.HashMap;
+
 import java.util.List;
 import java.util.Map;
 
@@ -39,7 +30,7 @@ public class DatabaseHandler {
     private static FirebaseDatabase db;
     private static DatabaseReference mDatabase;
 
-    private static ValueEventListener listener;
+    private static ChildEventListener listener;
     private static ChildEventListener onCourseAdded;
 
     private static final String TAG = "DATABASE HANDLER";
@@ -87,37 +78,44 @@ public class DatabaseHandler {
                 });
     }
 
-    private static void attachListener(DatabaseReference ref) {
-        if (listener == null) {
-            listener = new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    Log.d("CHANGE", dataSnapshot.toString());
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-                    Log.w("warning", "loadPost:onCancelled",
-                            databaseError.toException());
-                }
-            };
-        }
-        ref.addValueEventListener(listener);
-    }
+//    private static void attachListener(DatabaseReference ref) {
+//        if (listener == null) {
+//            listener = new ChildEventListener() {
+//                @Override
+//                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                    Log.d("CHANGE", dataSnapshot.toString());
+//                }
+//
+//                @Override
+//                public void onCancelled(@NonNull DatabaseError databaseError) {
+//                    Log.w("warning", "loadPost:onCancelled",
+//                            databaseError.toException());
+//                }
+//
+//            };
+//        }
+//        ref.addValueEventListener(listener);
+//    }
 
     public static void addCourse(Course course) {
         DatabaseReference id = mDatabase.child("courses").push(); // .getKey()
         id.setValue(course)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void unused) {}
-                });
+            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void unused) {}
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.d(TAG, "Failure: " + e.toString());
+                }
+            });
     }
 
     public static void addUser(User user) {
         mDatabase.child("users").push().setValue(user);
     }
 
+    // Test
     private static void createSampleCourses() {
         // public Course(String code, String name, Map<String, boolean> sessions, List<String> prerequisites) {
         // Larger size requires Map.ofEntries( entry(k,v), ... )
@@ -127,63 +125,63 @@ public class DatabaseHandler {
                 "CSCC24",
                 "Principles of Programming Languages",
                 Map.of(0, true, 1, true, 2, false),
-                Map.of("CSCB07", true, "CSCB09", true))
+                List.of("CSCB07", "CSCB09"))
         );
 
         courses.add(new Course(
                 "CSCB07",
                 "Software Design",
                 Map.of(0, false, 1, true, 2, true),
-                Map.of("CSCA48", true))
+                List.of("CSCA48"))
         );
 
         courses.add(new Course(
                 "CSCB09",
                 "Software Tools and Systems Programming",
                 Map.of(0, true, 1, true, 2, false),
-                Map.of("CSCA48", true))
+                List.of("CSCA48"))
         );
 
         courses.add(new Course(
                 "CSCA48",
                 "Introduction to Compute Science II",
                 Map.of(0, true,1, true, 2, false),
-                Map.of("CSCA08", true))
+                List.of("CSCA08"))
         );
 
         courses.add(new Course(
                 "CSCA08",
                 "Introduction to Compute Science I",
                 Map.of(0, true, 1, false, 2, true),
-                Map.of())
+                List.of())
         );
 
         courses.add(new Course(
                 "CSCC63",
                 "Computability and Computational Complexity",
                 Map.of(0, true, 1, false, 2, true),
-                Map.of("CSCB63", true, "CSCB36", true))
+                List.of("CSCB63", "CSCB36"))
         );
 
         courses.add(new Course(
                 "CSCB63",
                 "Design and Analysis of Data Structures",
                 Map.of(0, true, 1, true, 2, false),
-                Map.of("CSCB36", true))
+                List.of("CSCB36"))
         );
 
         courses.add(new Course(
                 "CSCB36",
                 "Introduction to the Theory of Computation",
                 Map.of(0, false, 1, true, 2, true),
-                Map.of("CSCA48", true, "CSCA67", true))
+                List.of("CSCA48", "CSCA67"))
         );
 
         courses.add(new Course( // Problem course as there exists MATA67
                 "CSCA67",
                 "Discrete Mathematics",
                 Map.of(0, false, 1, true, 2, true),
-                Map.of())
+                List.of())
         );
 
         for (Course course : courses) addCourse(course);
@@ -193,6 +191,7 @@ public class DatabaseHandler {
 
     }
 
+    // Test
     private static void createSampleUsers() {
         ArrayList<User> users = new ArrayList<>();
 
@@ -211,18 +210,6 @@ public class DatabaseHandler {
         for (User user : users) addUser(user);
     }
 
-    private static void update() {
-        Task<DataSnapshot> courses = mDatabase.child("courses").get();
-        courses.addOnSuccessListener(new OnSuccessListener<DataSnapshot>() {
-            @Override
-            public void onSuccess(DataSnapshot dataSnapshot) {
-                for (DataSnapshot s : dataSnapshot.getChildren()) {
-                    attachListener(s.getRef());
-                }
-            }
-        });
-    }
-
     private static void listenForNewCourses(DatabaseReference coursesRef) {
         if (onCourseAdded == null) onCourseAdded = new ChildEventListener() {
             @Override
@@ -235,7 +222,9 @@ public class DatabaseHandler {
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                Log.e(TAG, "what... somebody just changed the ID to a course");
+                Log.d(TAG, "Child Changed: " + snapshot.toString());
+                // Log.d("PREVIOUS CHANGE", previousChildName);
+                //Log.e(TAG, "what... somebody just changed the ID to a course");
             }
 
             @Override
@@ -247,12 +236,12 @@ public class DatabaseHandler {
 
             @Override
             public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
+                //Log.d(TAG, "Child Moved: " + snapshot.toString());
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-
+                Log.d(TAG, "Cancelled? " + error.toString());
             }
         };
 
@@ -281,15 +270,15 @@ public class DatabaseHandler {
         listenForNewCourses(mDatabase.child("courses").getRef());
 
         // Test : onDataChange
-        new java.util.Timer().schedule(
-                new java.util.TimerTask() {
-                    @Override
-                    public void run() {
-                        update();
-                    }
-                },
-                5000
-        );
+//        new java.util.Timer().schedule(
+//                new java.util.TimerTask() {
+//                    @Override
+//                    public void run() {
+//                        update();
+//                    }
+//                },
+//                5000
+//        );
 
 //        attachListener( mDatabase.child("courses").getRef());
 //        mDatabase.child("courses").get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
